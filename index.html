@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spine MRI Report</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab-group {
+            display: flex;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            transition: background-color 0.3s;
+        }
+
+        .tab:hover {
+            background-color: #e6e6e6;
+        }
+
+        .tab.active {
+            color: white;
+            background-color: #4caf50;
+            font-weight: bold;
+            border-bottom: 2px solid #f4f6f9;
+        }
+
+        .settings {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 0 7.5px;
+        }
+
+        .settings:hover {
+            background-color: #0056b3;
+        }
+
+        .settings.style {
+            background-color: #f2ff00;
+            color: #333;
+        }
+
+        .settings.clear-btn {
+            background-color: red;
+            color: white;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .template-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .template-list.flex {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .template-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f7f7f7;
+            margin: 5px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: box-shadow 0.2s;
+        }
+
+        .template-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .template-item input {
+            flex: 1;
+            margin-right: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .template-item select {
+            margin-right: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .buttons button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .buttons button:hover {
+            background-color: #ff6666;
+        }
+
+        .save-button {
+            display: block;
+            margin: 20px auto;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .save-button:hover {
+            background-color: #45a049;
+        }
+
+        .add-button {
+            display: block;
+            margin: 20px 0;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .add-button:hover {
+            background-color: #0056b3;
+        }
+
+        .dragging {
+            opacity: 0.5;
+            background-color: #d3e4ff;
+        }
+
+        #statusMessage,
+        #optionStatusMessage {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: green;
+        }
+
+        li {
+            margin: 7.5px;
+        }
+
+        #templateList {
+            display: block;
+        }
+
+        #optionEditor h4,
+        #optionEditor h3 {
+            margin: 7.5px 0;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 5px;
+            margin: 10px 10px;
+            border: 1px solid #999;
+            border-radius: 4px;
+        }
+
+        .custom-dropdown {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 220px;
+        }
+
+        .custom-dropdown-selected {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #333;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .custom-dropdown-selected:hover {
+            border-color: #888;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-dropdown-selected::after {
+            content: "";
+            border: 6px solid transparent;
+            border-top-color: #333;
+            margin-left: 10px;
+        }
+
+        .custom-dropdown-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .custom-dropdown-search {
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .custom-dropdown-options {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .custom-dropdown-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .custom-dropdown-option:hover {
+            background-color: #f5f5f5;
+        }
+
+        input[type="number"] {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 80px;
+            box-sizing: border-box;
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #333;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="number"]:hover {
+            border-color: #888;
+        }
+
+        input[type="number"]:focus {
+            border-color: #4caf50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+
+        input[type="checkbox"]:hover {
+            border-color: #888;
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: #4caf50;
+            border-color: #4caf50;
+            background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 10.8L3.2 8L2.26667 8.93333L6 12.6667L14 4.66667L13.0667 3.73333L6 10.8Z' fill='%23fff'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: 14px 14px;
+            background-position: center;
+        }
+
+        .template-items {
+            display: flex;
+            align-items: center;
+        }
+
+        .template-items>input,
+        .template-items>div {
+            margin-right: 10px;
+            margin-left: 10px;
+        }
+
+        .template-items>input[type=checkbox] {
+            margin-left: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            margin: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal-btn.confirm {
+            background-color: red;
+            color: #fff;
+        }
+
+        .modal-btn.cancel {
+            background-color: #ccc;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab-group">
+                <!-- 動態生成分頁 -->
+            </div>
+            <div id="clearModal" class="modal">
+                <div class="modal-content">
+                    <p>確定要清除所有勾選內容嗎？</p>
+                    <button id="confirmClearBtn" class="modal-btn confirm">確定</button>
+                    <button id="cancelClearBtn" class="modal-btn cancel">取消</button>
+                </div>
+            </div>
+            <div class="tab-group">
+                <button class="settings clear-btn" onclick="showClearModal()">清除</button>
+                <button class="settings" onclick="navigateToSettings()">模板</button>
+                <button class="settings" onclick="navigateToOptionManager()">選項</button>
+            </div>
+        </div>
+
+        <div id="dynamic-tabs-content">
+            <!-- 動態生成分頁內容 -->
+        </div>
+
+        <div id="template-manager" class="tab-content">
+            <h2 style="text-align: center;">模板管理</h2>
+            <button class="add-button" onclick="addTemplate()">新增模板</button>
+            <ul id="templateList" class="template-list"></ul>
+            <button class="save-button" id="saveTemplates">儲存模板</button>
+            <div id="statusMessage"></div>
+        </div>
+
+        <div id="option-manager" class="tab-content">
+            <h2 style="text-align: center;">選項管理</h2>
+            <div id="optionEditor"></div>
+            <button class="save-button" id="saveOptions">儲存選項</button>
+            <div id="optionStatusMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        let templates = JSON.parse(localStorage.getItem('templates')) || [
+            { text: "osteoporosis", type: "checkbox" },
+            { text: "Scoliosis", type: "checkbox" },
+            { text: "Spondylosis", type: "checkbox" },
+            { text: "Hypertrophy of ligamentum flavum", type: "checkbox" },
+            { text: "S/P segmental fixation on (B) to (B)", type: "template" },
+            { text: "S/p segmental fixation and caging on (B) to (B)", type: "template" },
+            { text: "S/p laminectomy on (B) to (B)", type: "template" },
+            { text: "Grade  (NUM) spondylolithesis of (A) (A) (A)", type: "template" },
+            { text: "Retrolithesis of (A) (A) (A)", type: "template" },
+            { text: "Compression fracture of  (B)", type: "template" },
+            { text: "HIVD on (B) (C)", type: "template" },
+            { text: "Spinal stenosis  on (B) (C)", type: "template" },
+            { text: "Narrowing of neuroforamen on right (C)", type: "template" },
+            { text: "Narrowing of neuroforamen on left (C)", type: "template" },
+            { text: "Narrowing of neuroforamen bilateral (C)", type: "template" },
+            { text: "Cord compression  on (B) (C)", type: "template" },
+            { text: "Cord swelling  on (B) (C)", type: "template" },
+            { text: "Schmorl's nodes adjacent to (C) disc", type: "template" }
+        ];
+
+        const spinalSettings = JSON.parse(localStorage.getItem('spinalSettings')) || {
+            cervical: {
+                A: [
+                    "C2 on C3", "C3 on C4", "C4 on C5", "C5 on C6",
+                    "C6 on C7", "C7 on T1", "T1 on T2"
+                ],
+                B: ["C2", "C3", "C4", "C5", "C6", "C7", "T1", "T2"],
+                C: [
+                    "C2-3", "C3-4", "C4-5", "C5-6", "C6-7", "C7-T1",
+                    "T1-2", "T2-3"
+                ],
+                D: ["C2-3-4", "C3-4-5", "C4-5-6", "C5-6-7", "C6-7-T1"]
+            },
+            thoracic: {
+                A: [
+                    "C5 on C6", "C6 on C7", "C7 on T1", "T1 on T2",
+                    "T2 on T3", "T3 on T4", "T4 on T5", "T5 on T6",
+                    "T6 on T7", "T7 on T8", "T8 on T9", "T9 on T10",
+                    "T10 on T11", "T11 on T12", "T12 on L1", "L1 on L2"
+                ],
+                B: [
+                    "C5", "C6", "C7", "T1", "T2", "T3", "T4",
+                    "T5", "T6", "T7", "T8", "T9", "T10",
+                    "T11", "T12", "L1", "L2"
+                ],
+                C: [
+                    "C5-6", "C6-7", "C7-T1", "T1-2", "T2-3",
+                    "T3-4", "T4-5", "T5-6", "T6-7", "T7-8",
+                    "T8-9", "T9-10", "T10-11", "T11-12",
+                    "T12-L1", "L1-2", "L2-3"
+                ],
+                D: ["C2-3-4", "C3-4-5", "C4-5-6", "C5-6-7", "C6-7-T1"]
+            },
+            lumbar: {
+                A: [
+                    "T10 on T11", "T11 on T12", "T12 on L1", "L1 on L2",
+                    "L1 on L2", "L2 on L3", "L3 on L4", "L4 on L5",
+                    "L5 on L6", "L5 on S1"
+                ],
+                B: [
+                    "T10", "T11", "T12", "L1", "L2",
+                    "L3", "L4", "L5", "L6", "S1"
+                ],
+                C: [
+                    "T10-11", "T11-12", "T12-L1", "L1-2",
+                    "L2-3", "L3-4", "L4-5", "L5-6", "L5-S1"
+                ],
+                D: ["C2-3-4", "C3-4-5", "C4-5-6", "C5-6-7", "C6-7-T1"]
+            }
+        };
+
+
+        const tabGroup = document.querySelector('.tab-group');
+        const tabContentContainer = document.getElementById('dynamic-tabs-content');
+        const optionEditor = document.getElementById('optionEditor');
+        const optionStatusMessage = document.getElementById('optionStatusMessage');
+        const templateList = document.getElementById('templateList');
+        const statusMessage = document.getElementById('statusMessage');
+
+
+        function countPlaceholders(template, placeholder) {
+            const regex = new RegExp(`\\(${placeholder}\\)`, 'g');
+            return (template.match(regex) || []).length;
+        }
+
+        function renderTabs() {
+            tabGroup.innerHTML = '';
+            tabContentContainer.innerHTML = '';
+            Object.keys(spinalSettings).forEach((section, index) => {
+                const tab = document.createElement('div');
+                tab.className = `tab ${index === 0 ? 'active' : ''}`;
+                tab.dataset.tab = section;
+                tab.textContent = section.charAt(0).toUpperCase() + section.slice(1);
+                tabGroup.appendChild(tab);
+
+                const tabContent = document.createElement('div');
+                tabContent.id = section;
+                tabContent.className = `tab-content ${index === 0 ? 'active' : ''}`;
+                tabContent.innerHTML = `<h2>${section.charAt(0).toUpperCase() + section.slice(1)}</h2>`;
+
+                const templatesContainer = document.createElement('div');
+                templatesContainer.className = 'templates-container';
+
+                const templatesList = document.createElement('ul');
+                templatesList.classList.add('template-list');
+
+                templates.forEach((template, idx) => {
+                    const li = document.createElement('li');
+                    li.classList.add('template-items');
+                    li.dataset.templateType = template.type;
+                    if (template.type === 'checkbox') {
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.addEventListener('change', () => {
+                            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                            document.querySelector('[data-tab="' + section + '"]').classList.add('active');
+                            document.getElementById(section).classList.add('active');
+                        });
+                        li.appendChild(checkbox);
+                    }
+
+                    const regex = /\((NUM|FLOAT|[A-Z])\)/g;
+                    let lastIndex = 0;
+                    let match;
+
+                    while ((match = regex.exec(template.text)) !== null) {
+                        if (match.index > lastIndex) {
+                            li.appendChild(document.createTextNode(template.text.substring(lastIndex, match.index)));
+                        }
+
+                        const token = match[1];
+
+                        if (token === "NUM") {
+                            const inputNum = document.createElement('input');
+                            inputNum.type = 'number';
+                            inputNum.value = "";
+                            li.appendChild(inputNum);
+                        } else if (token === "FLOAT") {
+                            const inputFloat = document.createElement('input');
+                            inputFloat.type = 'number';
+                            inputFloat.step = "any";
+                            inputFloat.value = "";
+                            li.appendChild(inputFloat);
+                        } else if (/^[A-Z]$/.test(token)) {
+                            const options = (spinalSettings[section] && spinalSettings[section][token]) ? spinalSettings[section][token] : [];
+                            const dropdown = createCustomDropdown("---請選擇---", options);
+                            li.appendChild(dropdown);
+                        }
+
+                        lastIndex = regex.lastIndex;
+                    }
+
+                    if (lastIndex < template.text.length) {
+                        li.appendChild(document.createTextNode(template.text.substring(lastIndex)));
+                    }
+
+                    templatesList.appendChild(li);
+                });
+
+                templatesContainer.appendChild(templatesList);
+                tabContent.appendChild(templatesContainer);
+
+                const resultContainer = document.createElement('div');
+                resultContainer.className = 'result-container';
+                resultContainer.innerHTML = `
+                    <button class="save-button" onclick="generateTemplate('${section}')">生成</button>
+                    <textarea id="result-${section}" rows="20" style="width: 100%; margin-top: 20px;"></textarea>
+                    <button class="save-button" onclick="copyToClipboard('result-${section}')">剪貼簿</button>
+                `;
+                tabContent.appendChild(resultContainer);
+
+                tabContentContainer.appendChild(tabContent);
+            });
+        }
+
+        function createCustomDropdown(placeholder, options, token) {
+            const container = document.createElement("div");
+            container.className = "custom-dropdown";
+            container.style.position = "relative";
+            container.style.display = "inline-block";
+            container.style.minWidth = "120px";
+            container.value = [];
+            container.dataset.token = token;
+
+            const selected = document.createElement("div");
+            selected.className = "custom-dropdown-selected";
+            selected.style.border = "1px solid #ccc";
+            selected.style.padding = "5px";
+            selected.style.cursor = "pointer";
+            selected.style.backgroundColor = "#fff";
+            selected.textContent = placeholder;
+
+            const dropdownList = document.createElement("div");
+            dropdownList.className = "custom-dropdown-list";
+            dropdownList.style.position = "absolute";
+            dropdownList.style.top = "100%";
+            dropdownList.style.left = "0";
+            dropdownList.style.right = "0";
+            dropdownList.style.border = "1px solid #ccc";
+            dropdownList.style.backgroundColor = "#fff";
+            dropdownList.style.zIndex = "1000";
+            dropdownList.style.display = "none";
+
+            const searchInput = document.createElement("input");
+            searchInput.type = "text";
+            searchInput.className = "custom-dropdown-search";
+            searchInput.placeholder = "搜尋...";
+            searchInput.style.boxSizing = "border-box";
+            searchInput.style.width = "100%";
+            searchInput.style.padding = "5px";
+            searchInput.style.borderBottom = "1px solid #ccc";
+
+            const optionsList = document.createElement("ul");
+            optionsList.className = "custom-dropdown-options";
+            optionsList.style.listStyleType = "none";
+            optionsList.style.padding = "0";
+            optionsList.style.margin = "0";
+            optionsList.style.maxHeight = "150px";
+            optionsList.style.overflowY = "auto";
+
+            options.forEach(function (optionValue) {
+                const liOption = document.createElement("li");
+                liOption.className = "custom-dropdown-option";
+                liOption.dataset.value = optionValue;
+                liOption.style.padding = "5px";
+                liOption.style.cursor = "pointer";
+                liOption.style.display = "flex";
+                liOption.style.alignItems = "center";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.style.marginRight = "5px";
+
+                checkbox.addEventListener("change", function (e) {
+                    const val = liOption.dataset.value;
+                    if (checkbox.checked) {
+                        if (!container.value.includes(val)) {
+                            container.value.push(val);
+                        }
+                    } else {
+                        container.value = container.value.filter(v => v !== val);
+                    }
+                    updateSelectedDisplay();
+                });
+
+                liOption.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    const val = liOption.dataset.value;
+
+                    if (!e.shiftKey) {
+                        if (e.target.tagName.toLowerCase() !== "input") {
+                            checkbox.checked = !checkbox.checked;
+                        }
+                        const newState = checkbox.checked;
+                        if (newState) {
+                            if (!container.value.includes(val)) {
+                                container.value.push(val);
+                            }
+                        } else {
+                            container.value = container.value.filter(v => v !== val);
+                        }
+                        updateSelectedDisplay();
+                    }
+
+                    if (e.shiftKey && container.dataset.token !== "A") {
+                        let liParent = container.parentElement;
+                        let similarDropdowns = liParent.querySelectorAll('.custom-dropdown');
+                        similarDropdowns.forEach(dropdown => {
+                            if (dropdown.dataset.token === container.dataset.token && dropdown !== container) {
+                                let optionLi = dropdown.querySelector(`li.custom-dropdown-option[data-value="${val}"]`);
+                                if (optionLi) {
+                                    let cb = optionLi.querySelector("input[type='checkbox']");
+                                    let toggledState = !cb.checked;
+                                    cb.checked = toggledState;
+                                    let currentVal = dropdown.value;
+                                    if (toggledState) {
+                                        if (!currentVal.includes(val)) {
+                                            currentVal.push(val);
+                                        }
+                                    } else {
+                                        dropdown.value = currentVal.filter(v => v !== val);
+                                    }
+                                    if (dropdown.updateSelectedDisplay) {
+                                        dropdown.updateSelectedDisplay();
+                                    } else {
+                                        let selectedDisplay = dropdown.querySelector('.custom-dropdown-selected');
+                                        selectedDisplay.textContent = dropdown.value.length > 0 ? dropdown.value.join(", ") : placeholder;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+
+
+                liOption.appendChild(checkbox);
+                const span = document.createElement("span");
+                span.textContent = optionValue;
+                liOption.appendChild(span);
+                optionsList.appendChild(liOption);
+            });
+
+            dropdownList.appendChild(searchInput);
+            dropdownList.appendChild(optionsList);
+
+            container.appendChild(selected);
+            container.appendChild(dropdownList);
+
+            selected.addEventListener("click", function (e) {
+                e.stopPropagation();
+                dropdownList.style.display = dropdownList.style.display === "none" ? "block" : "none";
+                searchInput.focus();
+            });
+
+            document.addEventListener("click", function (e) {
+                if (!container.contains(e.target)) {
+                    dropdownList.style.display = "none";
+                }
+            });
+
+            searchInput.addEventListener("input", function () {
+                const filter = searchInput.value.toLowerCase();
+                const optionItems = optionsList.querySelectorAll(".custom-dropdown-option");
+                optionItems.forEach(function (item) {
+                    if (item.textContent.toLowerCase().indexOf(filter) > -1) {
+                        item.style.display = "flex";
+                    } else {
+                        item.style.display = "none";
+                    }
+                });
+            });
+
+            function updateSelectedDisplay() {
+                selected.innerHTML = "";
+                if (container.value.length > 0) {
+                    container.value.forEach(item => {
+                        const tag = document.createElement("span");
+                        tag.textContent = item;
+                        tag.style.display = "inline-block";
+                        tag.style.marginRight = "5px";
+                        tag.style.marginTop = "5px";
+                        tag.style.marginBottom = "5px";
+                        tag.style.padding = "2px 5px";
+                        tag.style.backgroundColor = "#e6e6e6";
+                        tag.style.borderRadius = "3px";
+                        const clearBtn = document.createElement("button");
+                        clearBtn.textContent = "X";
+                        clearBtn.style.fontWeight = "bold";
+                        clearBtn.style.color = "#ff4d4d";
+                        clearBtn.style.border = "none";
+                        clearBtn.style.cursor = "pointer";
+                        clearBtn.style.marginLeft = "5px";
+                        clearBtn.style.borderRadius = "50%";
+                        clearBtn.style.backgroundColor = "transparent";
+                        clearBtn.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            container.value = container.value.filter(val => val !== item);
+                            const optionItems = dropdownList.querySelectorAll(".custom-dropdown-option");
+                            optionItems.forEach(li => {
+                                if (li.dataset.value === item) {
+                                    const checkbox = li.querySelector("input[type='checkbox']");
+                                    if (checkbox) {
+                                        checkbox.checked = false;
+                                    }
+                                }
+                            });
+                            updateSelectedDisplay();
+                        });
+                        tag.appendChild(clearBtn);
+                        selected.appendChild(tag);
+                    });
+                } else {
+                    selected.textContent = placeholder;
+                }
+            }
+            container.updateSelectedDisplay = updateSelectedDisplay;
+
+            return container;
+        }
+
+        function getTemplateResult(li) {
+            const templateType = li.dataset.templateType;
+
+            if (templateType === "checkbox") {
+                const checkbox = li.querySelector('input[type="checkbox"]');
+                if (!checkbox || !checkbox.checked) {
+                    return null;
+                }
+                let result = "";
+                li.childNodes.forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        result += node.textContent;
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.tagName.toLowerCase() === "input" && node.type === "checkbox") {
+                            return;
+                        } else {
+                            result += node.innerText;
+                        }
+                    }
+                });
+                return result;
+            }
+
+            let segments = [];
+            let placeholderIndex = 0;
+
+            li.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    segments.push({ type: "text", content: node.textContent });
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.tagName.toLowerCase() === "input" && node.type === "number") {
+                        placeholderIndex++;
+                        const val = node.value.trim();
+                        segments.push({
+                            type: "placeholder",
+                            content: val,
+                            filled: val !== "",
+                            placeholderIndex: placeholderIndex
+                        });
+                    }
+                    else if (node.classList.contains("custom-dropdown")) {
+                        placeholderIndex++;
+                        let values = node.value || [];
+                        let content = values.length > 0 ? values.join(", ") : "";
+                        segments.push({
+                            type: "placeholder",
+                            content: content,
+                            filled: values.length > 0,
+                            placeholderIndex: placeholderIndex
+                        });
+                    }
+                    else {
+                        segments.push({ type: "text", content: node.innerText });
+                    }
+                }
+            });
+
+            for (let i = 0; i < segments.length; i++) {
+                if (segments[i].type === "placeholder" && !segments[i].filled && segments[i].placeholderIndex > 1) {
+                    if (i > 0 && segments[i - 1].type === "text") {
+                        if (segments[i - 1].content.trim() === "to") {
+                            segments[i - 1].content = "";
+                        }
+                    }
+                }
+            }
+
+            let result = segments.map(seg => seg.content).join("");
+
+            let totalPlaceholders = segments.filter(seg => seg.type === "placeholder").length;
+            let filledPlaceholders = segments.filter(seg => seg.type === "placeholder" && seg.filled).length;
+            if (totalPlaceholders > 0 && filledPlaceholders < 1) {
+                return null;
+            }
+
+            return result;
+        }
+
+        function generateTemplate(section) {
+            const sectionDiv = document.getElementById(section);
+            if (!sectionDiv) return;
+
+            const templatesContainer = sectionDiv.querySelector('.templates-container .template-list');
+            if (!templatesContainer) return;
+
+            const resultArea = document.getElementById(`result-${section}`);
+            if (resultArea) {
+                resultArea.value = "";
+            }
+
+            const liTemplates = templatesContainer.querySelectorAll('li.template-items');
+            let results = [];
+
+            liTemplates.forEach(li => {
+                const result = getTemplateResult(li);
+                if (result !== null) {
+                    results.push(result);
+                }
+            });
+
+            if (resultArea) {
+                resultArea.value = results.join("\n");
+            }
+        }
+
+        function copyToClipboard(textareaId) {
+            const textarea = document.getElementById(textareaId);
+            textarea.select();
+            document.execCommand('copy');
+        }
+
+        function navigateToSettings() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('template-manager').classList.add('active');
+        }
+
+        function navigateToOptionManager() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('option-manager').classList.add('active');
+            renderOptionManager();
+        }
+
+        function renderOptionManager() {
+            optionEditor.innerHTML = '';
+            Object.keys(spinalSettings).forEach(section => {
+                const sectionTitle = document.createElement('h3');
+                sectionTitle.textContent = `${section.charAt(0).toUpperCase() + section.slice(1)}`;
+                optionEditor.appendChild(sectionTitle);
+
+                const ul = document.createElement('ul');
+                ul.classList.add('template-list');
+                ul.classList.add('flex');
+
+                Object.keys(spinalSettings[section]).forEach(group => {
+                    const groupContainer = document.createElement('li');
+                    groupContainer.innerHTML = `<h4>(${group.toUpperCase()})</h4>`;
+                    const textarea = document.createElement('textarea');
+                    textarea.rows = 5;
+                    textarea.cols = 45;
+                    textarea.value = spinalSettings[section][group].join('\n');
+                    textarea.dataset.section = section;
+                    textarea.dataset.group = group;
+                    groupContainer.appendChild(textarea);
+                    ul.appendChild(groupContainer);
+                });
+                optionEditor.appendChild(ul);
+            });
+        }
+
+        function renderTemplates() {
+            templateList.innerHTML = '';
+            templates.forEach((template, index) => {
+                const li = document.createElement('li');
+                li.className = 'template-item';
+                li.draggable = true;
+
+                const textarea = document.createElement('textarea');
+                textarea.value = template.text;
+                textarea.rows = 3;
+                li.appendChild(textarea);
+
+                const select = document.createElement('select');
+                ['template', 'checkbox'].forEach(optionType => {
+                    const option = document.createElement('option');
+                    option.value = optionType;
+                    option.textContent = optionType;
+                    if (template.type === optionType) option.selected = true;
+                    select.appendChild(option);
+                });
+                li.appendChild(select);
+
+                const buttons = document.createElement('div');
+                buttons.className = 'buttons';
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '刪除';
+                deleteButton.addEventListener('click', () => {
+                    templates.splice(index, 1);
+                    renderTemplates();
+                });
+                buttons.appendChild(deleteButton);
+                li.appendChild(buttons);
+
+                li.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', index);
+                    li.classList.add('dragging');
+                });
+
+                li.addEventListener('dragover', (e) => e.preventDefault());
+
+                li.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                    const toIndex = index;
+                    const [movedItem] = templates.splice(fromIndex, 1);
+                    templates.splice(toIndex, 0, movedItem);
+                    renderTemplates();
+                });
+
+                li.addEventListener('dragend', () => li.classList.remove('dragging'));
+
+                templateList.appendChild(li);
+            });
+        }
+
+        function addTemplate() {
+            templates.push({ text: '', type: 'template' });
+            renderTemplates();
+        }
+
+        function showClearModal() {
+            const modal = document.getElementById("clearModal");
+            modal.style.display = "block";
+        }
+
+        document.getElementById("confirmClearBtn").addEventListener("click", function () {
+            clearAllLiSelections();
+            closeClearModal();
+        });
+
+        document.getElementById("cancelClearBtn").addEventListener("click", function () {
+            closeClearModal();
+        });
+
+        window.addEventListener("click", function (event) {
+            const modal = document.getElementById("clearModal");
+            if (event.target === modal) {
+                closeClearModal();
+            }
+        });
+
+        function closeClearModal() {
+            const modal = document.getElementById("clearModal");
+            modal.style.display = "none";
+        }
+
+        function clearAllLiSelections() {
+            const item = document.querySelectorAll('textarea[id*=result-]');
+            const liElements = document.querySelectorAll('li');
+
+            item.forEach(e => e.value = '');
+            liElements.forEach(li => {
+                const checkboxes = li.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.checked = false;
+                });
+
+                const customDropdowns = li.querySelectorAll('.custom-dropdown');
+                customDropdowns.forEach(dropdown => {
+                    dropdown.value = [];
+                    const selectedDisplay = dropdown.querySelector('.custom-dropdown-selected');
+                    if (selectedDisplay) {
+                        selectedDisplay.textContent = '---請選擇---';
+                    }
+                    const dropdownCheckboxes = dropdown.querySelectorAll('.custom-dropdown-option input[type="checkbox"]');
+                    dropdownCheckboxes.forEach(input => {
+                        input.checked = false;
+                    });
+                });
+            });
+        }
+
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab')) {
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                e.target.classList.add('active');
+                document.getElementById(e.target.dataset.tab).classList.add('active');
+            }
+        });
+
+        document.getElementById('saveTemplates').addEventListener('click', () => {
+            templates = [];
+            Array.from(templateList.getElementsByTagName('li')).forEach(item => {
+                const textarea = item.querySelector('textarea');
+                const select = item.querySelector('select');
+                templates.push({
+                    text: textarea.value,
+                    type: select.value
+                });
+            });
+
+            localStorage.setItem('templates', JSON.stringify(templates));
+
+            statusMessage.textContent = 'Templates saved successfully!';
+            setTimeout(() => statusMessage.textContent = '', 3000);
+
+            renderTabs();
+            navigateToSettings();
+        });
+
+
+        document.getElementById('saveOptions').addEventListener('click', () => {
+            const textareas = optionEditor.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                const section = textarea.dataset.section;
+                const group = textarea.dataset.group;
+                spinalSettings[section][group] = textarea.value
+                    .split('\n')
+                    .filter(item => item.trim() !== '');
+            });
+
+            localStorage.setItem('spinalSettings', JSON.stringify(spinalSettings));
+
+            optionStatusMessage.textContent = 'Options saved and reset to default successfully!';
+            setTimeout(() => optionStatusMessage.textContent = '', 3000);
+
+            renderTabs();
+            navigateToOptionManager();
+        });
+
+
+        renderTabs();
+        renderTemplates();
+    </script>
+</body>
+
+</html>
