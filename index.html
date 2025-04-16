@@ -346,6 +346,7 @@
         .template-items {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .template-items>input,
@@ -396,6 +397,78 @@
             background-color: #ccc;
             color: #333;
         }
+
+        .section-selector {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: #333;
+            font-size: 16px;
+            margin: 10px auto;
+            cursor: pointer;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%234caf50'><polygon points='0,0 20,0 10,10'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 10px;
+        }
+
+        .section-selector:hover {
+            border-color: #388e3c;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .section-selector:focus {
+            outline: none;
+            border-color: #388e3c;
+            box-shadow: 0 0 12px rgba(56, 142, 60, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            /* 按鈕間距 */
+            margin: 15px auto;
+        }
+
+        .clear-storage-button,
+        .add-button {
+            margin: 0;
+            /* 調整 margin 為 0，使按鈕緊湊排列 */
+            flex: 0 0 auto;
+        }
+
+        .clear-storage-button {
+            background-color: #f44336;
+            /* 紅色 */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .clear-storage-button:hover {
+            background-color: #d32f2f;
+            box-shadow: 0 0 8px rgba(244, 67, 54, 0.4);
+        }
+
+        .settings-clear-btn {
+            background-color: #ff9800;
+            /* 橘色 */
+        }
+
+        .settings-clear-btn:hover {
+            background-color: #f57c00;
+            box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
+        }
     </style>
 </head>
 
@@ -425,7 +498,13 @@
 
         <div id="template-manager" class="tab-content">
             <h2 style="text-align: center;">模板管理</h2>
-            <button class="add-button" onclick="addTemplate()">新增模板</button>
+            <div class="button-group">
+                <button class="add-button" onclick="addTemplate()">新增模板</button>
+                <button class="clear-storage-button" id="clearTemplatesBtn">回復預設 模板</button>
+
+            </div>
+            <select id="sectionSelector" class="section-selector">
+            </select>
             <ul id="templateList" class="template-list"></ul>
             <button class="save-button" id="saveTemplates">儲存模板</button>
             <div id="statusMessage"></div>
@@ -433,6 +512,10 @@
 
         <div id="option-manager" class="tab-content">
             <h2 style="text-align: center;">選項管理</h2>
+            <div class="button-group">
+                <button class="clear-storage-button settings-clear-btn" id="clearSettingsBtn">回復預設 選項</button>
+            </div>
+
             <div id="optionEditor"></div>
             <button class="save-button" id="saveOptions">儲存選項</button>
             <div id="optionStatusMessage"></div>
@@ -440,28 +523,87 @@
     </div>
 
     <script>
-        let templates = JSON.parse(localStorage.getItem('templates')) || [
-            { text: "osteoporosis", type: "checkbox" },
-            { text: "Scoliosis", type: "checkbox" },
-            { text: "Spondylosis", type: "checkbox" },
-            { text: "Hypertrophy of ligamentum flavum", type: "checkbox" },
-            { text: "S/P segmental fixation on (B) to (B)", type: "template" },
-            { text: "S/p segmental fixation and caging on (B) to (B)", type: "template" },
-            { text: "S/p laminectomy on (B) to (B)", type: "template" },
-            { text: "Grade  (NUM) spondylolithesis of (A) (A) (A)", type: "template" },
-            { text: "Retrolithesis of (A) (A) (A)", type: "template" },
-            { text: "Compression fracture of  (B)", type: "template" },
-            { text: "HIVD on (B) (C)", type: "template" },
-            { text: "Spinal stenosis  on (B) (C)", type: "template" },
-            { text: "Narrowing of neuroforamen on right (C)", type: "template" },
-            { text: "Narrowing of neuroforamen on left (C)", type: "template" },
-            { text: "Narrowing of neuroforamen bilateral (C)", type: "template" },
-            { text: "Cord compression  on (B) (C)", type: "template" },
-            { text: "Cord swelling  on (B) (C)", type: "template" },
-            { text: "Schmorl's nodes adjacent to (C) disc", type: "template" }
-        ];
+        function deepClone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+        const defaultTemplates = {
+            cervical: [
+                { text: "osteoporosis", type: "checkbox" },
+                { text: "Scoliosis", type: "checkbox" },
+                { text: "Spondylosis", type: "checkbox" },
+                { text: "Hypertrophy of ligamentum flavum", type: "checkbox" },
+                { text: "Hypertrophy of posterior longutidinal ligament on (B) to (B)", type: "template" },
+                { text: "S/P segmental fixation on (B) to (B)", type: "template" },
+                { text: "S/p segmental fixation and caging on (B) to (B)", type: "template" },
+                { text: "S/p laminectomy on (B) to (B)", type: "template" },
+                { text: "S/p corpectomy and segmental fixation on  (B) to (B)", type: "template" },
+                { text: "Grade  (NUM) spondylolithesis of (A) (A) (A)", type: "template" },
+                { text: "Retrolithesis of (A) (A) (A)", type: "template" },
+                { text: "Acute compression fracture of  (B)", type: "template" },
+                { text: "Old compression fracture of  (B)", type: "template" },
+                { text: "HIVD on (B) (C)", type: "template" },
+                { text: "Degenerative change with narrowing of (C) disc", type: "template" },
+                { text: "Spinal stenosis  on (B) (C)", type: "template" },
+                { text: "Narrowing of neuroforamen on right (C)", type: "template" },
+                { text: "Narrowing of neuroforamen on left (C)", type: "template" },
+                { text: "Narrowing of neuroforamen bilateral (C)", type: "template" },
+                { text: "Cord compression  on (B) (C)", type: "template" },
+                { text: "Cord swelling  on (B) (C)", type: "template" },
+                { text: "Schmorl's nodes adjacent to (C) disc", type: "template" }
+            ],
+            thoracic: [
+                { text: "osteoporosis", type: "checkbox" },
+                { text: "Scoliosis", type: "checkbox" },
+                { text: "Spondylosis", type: "checkbox" },
+                { text: "Hypertrophy of ligamentum flavum", type: "checkbox" },
+                { text: "S/P segmental fixation on (B) to (B)", type: "template" },
+                { text: "S/p segmental fixation and caging on (B) to (B)", type: "template" },
+                { text: "S/p laminectomy on (B) to (B)", type: "template" },
+                { text: "Grade  (NUM) spondylolithesis of (A) (A) (A)", type: "template" },
+                { text: "Retrolithesis of (A) (A) (A)", type: "template" },
+                { text: "Acute compression fracture of  (B)", type: "template" },
+                { text: "Old compression fracture of  (B)", type: "template" },
+                { text: "HIVD on (B) (C)", type: "template" },
+                { text: "Degenerative change with narrowing of (C) disc", type: "template" },
+                { text: "Spinal stenosis  on (B) (C)", type: "template" },
+                { text: "Narrowing of neuroforamen on right (C)", type: "template" },
+                { text: "Narrowing of neuroforamen on left (C)", type: "template" },
+                { text: "Narrowing of neuroforamen bilateral (C)", type: "template" },
+                { text: "Cord compression  on (B) (C)", type: "template" },
+                { text: "Cord swelling  on (B) (C)", type: "template" },
+                { text: "Schmorl's nodes adjacent to (C) disc", type: "template" }
+            ],
+            lumbar: [
+                { text: "osteoporosis", type: "checkbox" },
+                { text: "Scoliosis", type: "checkbox" },
+                { text: "Spondylosis", type: "checkbox" },
+                { text: "Hypertrophy of ligamentum flavum", type: "checkbox" },
+                { text: "Facet arthrosis", type: "checkbox" },
+                { text: "S/P segmental fixation on (B) to (B)", type: "template" },
+                { text: "S/p segmental fixation and caging on (B) to (B)", type: "template" },
+                { text: "S/p laminectomy on (B) to (B)", type: "template" },
+                { text: "Grade  (NUM) spondylolithesis of (A) (A) (A)", type: "template" },
+                { text: "Retrolithesis of (A) (A) (A)", type: "template" },
+                { text: "Acute compression fracture of  (B)", type: "template" },
+                { text: "Old compression fracture of  (B)", type: "template" },
+                { text: "fracture of pars articularis on  (B) (B) (B)", type: "template" },
+                { text: "HIVD on (B) (C)", type: "template" },
+                { text: "Degenerative change with narrowing of (C) disc", type: "template" },
+                { text: "Spinal stenosis  on (B) (C)", type: "template" },
+                { text: "Narrowing of neuroforamen on right (C)", type: "template" },
+                { text: "Narrowing of neuroforamen on left (C)", type: "template" },
+                { text: "Narrowing of neuroforamen bilateral (C)", type: "template" },
+                { text: "Cord compression  on (B) (C)", type: "template" },
+                { text: "Cord swelling  on (B) (C)", type: "template" },
+                { text: "Cord tissue loss on (B) to (B)", type: "template" },
+                { text: "Schmorl's nodes adjacent to (C) disc", type: "template" },
+                { text: "Tarlov cyst measures (NUM)mm in (B)", type: "template" },
+                { text: "Hemangioms measures (NUM) mm in (B), (NUM) mm in (B), (NUM) mm in (B),", type: "template" }
+            ]
+        };
 
-        const spinalSettings = JSON.parse(localStorage.getItem('spinalSettings')) || {
+
+        const defaultSpinalSettings = {
             cervical: {
                 A: [
                     "C2 on C3", "C3 on C4", "C4 on C5", "C5 on C6",
@@ -482,12 +624,12 @@
                     "T10 on T11", "T11 on T12", "T12 on L1", "L1 on L2"
                 ],
                 B: [
-                    "C5", "C6", "C7", "T1", "T2", "T3", "T4",
+                    "C4", "C5", "C6", "C7", "T1", "T2", "T3", "T4",
                     "T5", "T6", "T7", "T8", "T9", "T10",
                     "T11", "T12", "L1", "L2"
                 ],
                 C: [
-                    "C5-6", "C6-7", "C7-T1", "T1-2", "T2-3",
+                    "C4-5", "C5-6", "C6-7", "C7-T1", "T1-2", "T2-3",
                     "T3-4", "T4-5", "T5-6", "T6-7", "T7-8",
                     "T8-9", "T9-10", "T10-11", "T11-12",
                     "T12-L1", "L1-2", "L2-3"
@@ -496,22 +638,26 @@
             },
             lumbar: {
                 A: [
-                    "T10 on T11", "T11 on T12", "T12 on L1", "L1 on L2",
+                    "T10 on T11", "T11 on T12", "T12 on L1",
                     "L1 on L2", "L2 on L3", "L3 on L4", "L4 on L5",
-                    "L5 on L6", "L5 on S1"
+                    "L5 on S1"
                 ],
                 B: [
                     "T10", "T11", "T12", "L1", "L2",
-                    "L3", "L4", "L5", "L6", "S1"
+                    "L3", "L4", "L5", "S1", "S2", "S3", "S4",
                 ],
                 C: [
                     "T10-11", "T11-12", "T12-L1", "L1-2",
-                    "L2-3", "L3-4", "L4-5", "L5-6", "L5-S1"
+                    "L2-3", "L3-4", "L4-5", "L5-S1"
                 ],
                 D: ["C2-3-4", "C3-4-5", "C4-5-6", "C5-6-7", "C6-7-T1"]
             }
         };
 
+
+
+        let templates = JSON.parse(localStorage.getItem('templates')) || deepClone(defaultTemplates);
+        const spinalSettings = JSON.parse(localStorage.getItem('spinalSettings')) || deepClone(defaultSpinalSettings);
 
         const tabGroup = document.querySelector('.tab-group');
         const tabContentContainer = document.getElementById('dynamic-tabs-content');
@@ -547,7 +693,7 @@
                 const templatesList = document.createElement('ul');
                 templatesList.classList.add('template-list');
 
-                templates.forEach((template, idx) => {
+                templates[section].forEach((template, idx) => {
                     const li = document.createElement('li');
                     li.classList.add('template-items');
                     li.dataset.templateType = template.type;
@@ -973,9 +1119,9 @@
             });
         }
 
-        function renderTemplates() {
+        function renderTemplates(section = 'cervical') {
             templateList.innerHTML = '';
-            templates.forEach((template, index) => {
+            templates[section].forEach((template, index) => {
                 const li = document.createElement('li');
                 li.className = 'template-item';
                 li.draggable = true;
@@ -1001,7 +1147,7 @@
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = '刪除';
                 deleteButton.addEventListener('click', () => {
-                    templates.splice(index, 1);
+                    templates[section].splice(index, 1);
                     renderTemplates();
                 });
                 buttons.appendChild(deleteButton);
@@ -1030,13 +1176,51 @@
         }
 
         function addTemplate() {
-            templates.push({ text: '', type: 'template' });
-            renderTemplates();
+            const currentSection = document.getElementById('sectionSelector').value;
+            templates[currentSection].push({ text: '', type: 'template' });
+            renderTemplates(currentSection);
         }
+        // 清除 templatesBySection
+        document.getElementById('clearTemplatesBtn').addEventListener('click', () => {
+            if (confirm('確定要清除所有 模板 資料並回復預設值嗎？')) {
+                localStorage.removeItem('templates');
+                templates = deepClone(defaultTemplates); // 統一用預設資料
+
+                localStorage.setItem('templates', JSON.stringify(templates));
+
+                renderSectionSelector();
+                renderTabs();
+                renderTemplates(document.getElementById('sectionSelector').value);
+
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.textContent = '模板 已回復為預設值！';
+                setTimeout(() => statusMessage.textContent = '', 3000);
+            }
+        });
+
+
+        document.getElementById('clearSettingsBtn').addEventListener('click', () => {
+            if (confirm('確定要清除所有 選項 資料並回復預設值嗎？')) {
+                localStorage.removeItem('spinalSettings');
+                spinalSettings = deepClone(defaultSpinalSettings); // 統一用預設資料
+
+                localStorage.setItem('spinalSettings', JSON.stringify(spinalSettings));
+
+                renderTabs();
+                navigateToOptionManager();
+
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.textContent = '選項 已回復為預設值！';
+                setTimeout(() => statusMessage.textContent = '', 3000);
+            }
+        });
+
 
         function showClearModal() {
-            const modal = document.getElementById("clearModal");
-            modal.style.display = "block";
+            clearAllLiSelections();
+            // 清除詢問彈窗
+            // const modal = document.getElementById("clearModal");
+            // modal.style.display = "block";
         }
 
         document.getElementById("confirmClearBtn").addEventListener("click", function () {
@@ -1070,7 +1254,10 @@
                 checkboxes.forEach(cb => {
                     cb.checked = false;
                 });
-
+                const inptNumber = li.querySelectorAll('input[type="number"]');
+                inptNumber.forEach(cb => {
+                    cb.value = '';
+                });
                 const customDropdowns = li.querySelectorAll('.custom-dropdown');
                 customDropdowns.forEach(dropdown => {
                     dropdown.value = [];
@@ -1085,8 +1272,24 @@
                 });
             });
         }
+        function renderSectionSelector() {
+            const sectionSelector = document.getElementById('sectionSelector');
+            sectionSelector.innerHTML = '';
 
+            Object.keys(templates).forEach((section, index) => {
+                const option = document.createElement('option');
+                option.value = section;
+                option.textContent = section.charAt(0).toUpperCase() + section.slice(1);
+                sectionSelector.appendChild(option);
+            });
 
+            // 初始渲染 templates
+            renderTemplates(sectionSelector.value);
+        }
+
+        document.getElementById('sectionSelector').addEventListener('change', (e) => {
+            renderTemplates(e.target.value);
+        });
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('tab')) {
                 document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -1098,11 +1301,12 @@
         });
 
         document.getElementById('saveTemplates').addEventListener('click', () => {
-            templates = [];
+            const currentSection = document.getElementById('sectionSelector').value;
+            templates[currentSection] = [];
             Array.from(templateList.getElementsByTagName('li')).forEach(item => {
                 const textarea = item.querySelector('textarea');
                 const select = item.querySelector('select');
-                templates.push({
+                templates[currentSection].push({
                     text: textarea.value,
                     type: select.value
                 });
@@ -1137,9 +1341,9 @@
             navigateToOptionManager();
         });
 
-
+        renderSectionSelector();
         renderTabs();
-        renderTemplates();
+        renderTemplates(document.getElementById('sectionSelector').value);
     </script>
 </body>
 
